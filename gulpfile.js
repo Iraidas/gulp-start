@@ -7,6 +7,7 @@ const concat       = require('gulp-concat');
 const uglify       = require('gulp-uglify-es').default;
 const imagemin     = require('gulp-imagemin');
 const clean        = require('gulp-clean');
+const gulpPug      = require('gulp-pug');
 
 function browsersync() {
     browserSync.init({
@@ -19,6 +20,15 @@ function browsersync() {
 function cleanDist() {
     return src('dist', {allowEmpty: true})
         .pipe(clean())
+}
+
+function pug() {
+    return src('app/**/*.pug')
+    .pipe(gulpPug({
+        pretty: true
+    }))
+    .pipe(dest('app'))
+    .pipe(browserSync.stream())
 }
 
 function styles() {
@@ -63,7 +73,7 @@ function images() {
 function watching () {
     watch(['app/sass/**/*.sass'], styles);
     watch(['app/js/**/*.js', '!app/js/main.min.js'], scripts);
-    watch('app/*.html').on('change', browserSync.reload);
+    watch('app/*.pug', parallel('pug')).on('change', browserSync.reload);
 }
 
 function build() {
@@ -82,6 +92,7 @@ exports.images      = images;
 exports.watching    = watching;
 exports.scripts     = scripts;
 exports.cleanDist   = cleanDist;
+exports.pug         = pug;
 
-exports.build       = series(cleanDist, images, styles, scripts, build);
-exports.default     = parallel(styles, scripts, browsersync, watching);
+exports.build       = series(cleanDist, images, pug, styles, scripts, build);
+exports.default     = parallel(pug, styles, scripts, browsersync, watching);
